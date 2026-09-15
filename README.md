@@ -183,6 +183,83 @@ public ReportAccessProvider reportAccessProvider() {
 
 > 一句话：**同进程集成必须 Java 17；Java 8/11 的项目就让报表独立部署，用接口 / iframe 页面 / 打印回调对接。**
 
+### 8）示例：接入 JeecgBoot 的登录态
+
+JeecgBoot 自己前端发的头是 **`X-Access-Token`**，登录成功后 `LoginUser` 会存进 Redis（key = `CommonConstant.PREFIX_USER_TOKEN + token`）；
+而**报表前端固定把同一串 token 放在 `Authorization` 头**，所以下面的 provider **两个头都读**，两端都能用。
+
+```java
+package org.jeecg.modules.report.config;      // 放在你自己会被 Spring 扫到的包
+
+import com.jimu.report.starter.security.ReportAccessProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import org.jeecg.common.system.vo.LoginUser;   // ⚠️ 类名/包名按你的 JeecgBoot 版本核对
+import org.jeecg.common.util.JwtUtil;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+@Configuration
+public class ReportSecurityConfig {
+
+    @Bean
+    @Primary                                  // 覆盖 starter 里"全放行"的默认实现
+    public ReportAccessProvider reportAccessProvider() {
+        return request -> {
+            String token = readToken(request);
+            if (token == null || token.isBlank()) {
+                return false;
+            }
+            try {
+                LoginUser user = JwtUtil.verifyToken(token);   // token 无效会抛异常
+                if (user == null) {
+                    return false;
+                }
+                // 想再收紧：只允许某些角色访问报表（按需打开）
+                // String roles = user.getRoleCode();
+                // return roles != null && (roles.contains("admin") || roles.contains("report"));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        };
+    }
+
+    /** 报表页面发的是 Authorization；Jeecg 自己发的是 X-Access-Token —— 两个头都读 */
+    private static String readToken(HttpServletRequest request) {
+        String t = request.getHeader("X-Access-Token");
+        if (t == null || t.isBlank()) {
+            t = request.getHeader("Authorization");
+        }
+        if (t != null && t.startsWith("Bearer ")) {
+            t = t.substring(7);
+        }
+        return t;
+    }
+}
+```
+
+**不想依赖 Jeecg 内部类**（版本之间类名有差异时更稳）：直接把 Redis 当"登录态白名单"查，有值就是已登录：
+
+```java
+@Bean
+@Primary
+public ReportAccessProvider reportAccessProvider(RedisUtil redisUtil) {
+    return request -> {
+        String token = readToken(request);              // 同上
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+        // key 与 Jeecg 登录时写入的保持一致
+        return redisUtil.hasKey("prefix_user_token_" + token);
+    };
+}
+```
+
+**token 怎么进到报表页面**（同域部署通常不用管）：报表前端会自己找 —— 优先 `window.__REPORT_TOKEN__`，其次 URL 上的 `?__token=xxx`，再不行就扫 localStorage / sessionStorage（Jeecg Vue3 存的 `pro__Access-Token` 能被扫到）。都拿不到时才需要手工注入。
+
+> ⚠️ `JwtUtil` / `TokenUtils` / `LoginUser` / `CommonConstant` 这些类在不同 JeecgBoot 版本里包路径略有差异（Shiro → Spring Security 迁移期间尤其明显），请以你项目里的实际引用为准；拿不准就用上面那版「查 Redis」的写法。
+
 ---
 
 ## 三、自己编译 demo
