@@ -1,9 +1,9 @@
-# TbReport · 可嵌入 Spring Boot 3 的轻量低代码报表工具（社区版）
+# TbReport · 可嵌入 Spring Boot 3 的轻量低代码报表工具
 
 TbReport 是一个**低代码报表 / 报表设计器**：在浏览器里画表格、绑定字段，就能做出**销售报表、对账单、发货单、检验单、工资单**这类**数据报表与打印表单**。
 支持**循环块（明细自动展开）、主子表、分组汇总、二维码/条码、1:1 打印套打、导出 Excel**，还能把**在 Excel 里排好版的表格直接导入成报表模板**；
 前端页面随 jar 一起发布，**一个依赖**嵌进你的 Spring Boot 3 项目，不用单独部署前端。
-可作为 **JimuReport（积木报表）** 一类商业报表工具的**社区版替代方案**。
+可作为 **JimuReport（积木报表）** 一类商业报表工具的**免费替代方案**。
 
 > Lightweight low-code reporting for Java / Spring Boot 3: visual report designer, master-detail & loop blocks,
 > SQL / HTTP / JSON datasets, 1:1 print forms, Excel import/export, page numbers & stamps — front-end included, embed with one jar.
@@ -11,7 +11,7 @@ TbReport 是一个**低代码报表 / 报表设计器**：在浏览器里画表�
 本仓库**只包含演示程序（`report-demo`）的源码与文档**，报表引擎与集成外壳以**编译好的 jar** 形式提供
 （`lib/tb-report-spring-boot-starter-*.jar`），因此 clone 下来不含引擎源码。
 
-> 💚 **永久免费使用**：社区版**不收费、不限期** —— 没有试用期、没有到期日，也没有授权码、不联网校验；
+> 💚 **永久免费使用**：**不收费、不限期** —— 没有试用期、没有到期日，也没有授权码、不联网校验；
 > 商用、内网、多少个项目、多少用户都可以。唯一不能做的是**把它本身当商品转售**，以及**反编译 jar**（详见[第七节 许可](#七许可license)）。
 > 觉得好用，欢迎到文末[支持下作者](#八制作不易打赏随缘)。
 
@@ -232,10 +232,10 @@ java -jar report-demo/target/tb-report-demo-<版本>.jar
 
 ## 七、许可（License）
 
-本仓库采用 **TbReport 社区版许可协议 v1.0（源码可见许可，source-available）**，完整条款见 [`LICENSE`](LICENSE)。
+本仓库采用 **TbReport 许可协议 v1.0（源码可见许可，source-available）**，完整条款见 [`LICENSE`](LICENSE)。
 它**不是** OSI 认证的开源协议——因为它限制了部分使用方式。
 
-**费用与期限**：社区版**不收费、不限期**（协议 2.6「免费使用且不限期」、6.3「社区版为零」）。你拿到的某个版本，永远按它随附的这份 LICENSE 使用。
+**费用与期限**：**不收费、不限期**（协议 2.6「免费使用且不限期」；6.3 明确"许可方的责任上限＝你实际支付的费用"）。你拿到的某个版本，永远按它随附的这份 LICENSE 使用。
 
 用一句话概括：
 

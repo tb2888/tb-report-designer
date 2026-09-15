@@ -55,7 +55,7 @@ ALTER TABLE tb_report_dataset ADD COLUMN field_remark VARCHAR(512) NULL COMMENT 
 
 ## [v1.0.0] — 2026-09-15
 
-**首个正式版本**：可嵌入 Spring Boot 3 的轻量低代码报表工具（社区版，**永久免费**：不限期、不收费，见 LICENSE 2.6）。
+**首个正式版本**：可嵌入 Spring Boot 3 的轻量低代码报表工具（**永久免费**：不限期、不收费，见 LICENSE 2.6）。
 
 ### 报表设计
 
@@ -94,4 +94,4 @@ ALTER TABLE tb_report_dataset ADD COLUMN field_remark VARCHAR(512) NULL COMMENT 
 
 ### 许可
 
-- 社区版**永久免费**（协议 2.6「免费使用且不限期」、6.3「社区版为零」）；LICENSE 属于**源码可见许可**，不是 OSI 开源协议。
+- **永久免费**（协议 2.6「免费使用且不限期」；6.3 明确"许可方的责任上限＝你实际支付的费用"）；LICENSE 属于**源码可见许可**，不是 OSI 开源协议。
