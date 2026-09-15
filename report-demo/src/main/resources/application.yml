@@ -1,0 +1,99 @@
+spring:
+  application:
+    name: tb-report-demo
+  datasource:
+    # 文件型 H2：数据落磁盘（./tb-report.mv.db），重启不丢报表
+    # AUTO_SERVER 允许多进程/控制台共享同一文件库
+    url: jdbc:h2:file:./tb-report;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      # 脚本为 UTF-8；不显式指定时 Spring 会按平台默认编码（中文 Windows 为 GBK）读取，导致中文乱码
+      encoding: UTF-8
+      schema-locations: classpath:db/schema-sample.sql
+      data-locations: classpath:db/data-sample.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+report:
+  enabled: true
+  api-prefix: /report/api
+  ui-path: /report/designer
+  # 元数据表名前缀：表名 = 前缀 + 实体名
+  #   tb_report_ + datasource => tb_report_datasource
+  #   tb_report_ + dataset    => tb_report_dataset
+  #   tb_report_ + report     => tb_report（前缀已含 report，不再重复追加）
+  table-prefix: tb_report_
+  # ⚠ 数据源密码的加密密钥：生产必须改成只有你知道的一串字符（20 位以上、大小写字母+数字混合）。
+  #   用途一：加密「页面上新建的数据源」的密码，密文存进元数据表 tb_report_datasource.password；
+  #   用途二：解密下面 datasources[].password 里写成 ENC(...) 的密码。
+  #   ⚠ 安全边界：密钥与密文同在配置文件里 → 只防「误看 / 误提交 / 日志泄漏」，
+  #     不防「拿到配置文件的人」（对方同时有密钥和密文，可直接解密）。仍是默认密钥时启动会打印告警。
+  #   ▸ 生成密文（两种方式，结果等价，都用这个密钥）：
+  #     ① 页面：侧边栏「数据资产 → 密码加密工具」，输入明文点「生成加密串」，复制结果；
+  #     ② 命令行（在项目根目录）：
+  #        mvn -q -pl report-demo org.codehaus.mojo:exec-maven-plugin:3.5.0:java `
+  #            "-Dexec.mainClass=com.jimu.report.demo.tool.EncryptPasswordTool" "-Dexec.args=你的密码"
+  #   ⚠ 换密钥的后果：数据库里已存的密文会解不开（页面上建的数据源需要重新录一次密码），
+  #     下面 datasources 里的 ENC(...) 也要用新密钥重新生成。
+  encrypt-key: CHANGE_ME_PLEASE_CHANGE_ME_00
+  # 建表失败静默降级（日志提示），便于接入宿主库时不干扰宿主启动
+  fail-fast: false
+  # 元数据（报表/数据集/纸张/数据源）所在数据源：
+  #   MAIN = 宿主主库；这里显式指向 MySQL 的 tb-report 库，报表数据持久化在 MySQL 中
+  #   也可改成 PG/Oracle：填下面 datasources 里声明的 id 即可
+  # 注意：只能引用 report.datasources 中声明的数据源（页面建的数据源本身存在元数据表里，无法自举）
+  metadata:
+    datasource-id: MAIN
+  limit:
+    preview-rows: 200
+    render-rows: 5000
+    query-timeout: 10
+    api-timeout: 15
+  # 配置文件声明的数据源：应用启动即注册，页面只读（不可编辑/删除），改配置需重启
+  datasources:
+    # 演示：第二个 H2 文件库，模拟「外部业务库」，用于验证跨库取数
+    - id: biz-h2
+      name: 业务库（H2 演示）
+      type: H2
+      url: "jdbc:h2:file:./demo-biz;AUTO_SERVER=TRUE;MODE=MySQL;INIT=RUNSCRIPT FROM 'classpath:db/biz-sample.sql'"
+      username: sa
+      # H2 默认用户 sa 没有密码，留空即可（空值不会被当成密文处理）
+      password: ""
+    # 真实 MySQL（本地开发实例）
+    - id: mysql-tbreport
+      # 开源仓默认关闭（示例里没有这个库）；要用请改 url / 账号 / 密码
+      enabled: false
+      name: MySQL 库（tb-report）
+      type: MYSQL
+      url: "jdbc:mysql://localhost:3306/tb-report?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: root
+      # 密码的三种写法（任选其一）：
+      #   ENC(...)        推荐 —— 用上面 report.encrypt-key 对应的「密码加密工具」生成，配置文件里不出现明文
+      #   ${DB_PASSWORD}  交给环境变量/配置中心注入，配置文件里压根不出现密码
+      #   明文            能跑，但不推荐
+      password: ""
+      maximum-pool-size: 8
+      query-timeout: 10
+    # 自定义 URL/驱动示例（Oracle service name、达梦等）：填了 url 就忽略 host/port/db-name
+    - id: biz-oracle
+      name: 业务库（Oracle 示例）
+      enabled: false
+      type: ORACLE
+      url: jdbc:oracle:thin:@//127.0.0.1:1521/ORCLPDB1
+      driver-class-name: oracle.jdbc.OracleDriver
+      username: report
+      password: ""
+
+logging:
+  level:
+    com.jimu.report: INFO

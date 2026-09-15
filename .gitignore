@@ -1,0 +1,24 @@
+# 开源仓的忽略规则（由 publish-open.ps1 复制为开源仓根目录的 .gitignore）
+
+# 构建产物 / 依赖
+target/
+node_modules/
+frontend/dist/
+
+# 本地数据库文件（运行 demo 后生成）
+report-demo/*.mv.db
+report-demo/*.trace.db
+report-demo/*.lock.db
+*.lock.db
+
+# 日志与 IDE
+*.log
+.idea/
+*.iml
+
+# 本仓不放二进制的 demo 可执行包（45MB，走 Releases）
+release/
+dist/
+
+# 本机跑免费版用的东西（可执行 jar + 启动脚本 + 运行痕迹），由主仓的同步脚本生成，不进 git
+_local/

@@ -1,0 +1,18 @@
+# 统一换行符，避免 Windows 上每次 checkout 都出现"整个文件都改了"的假 diff
+* text=auto eol=lf
+
+# Windows 脚本保持 CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# 二进制，禁止任何换行转换
+*.jar   binary
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.pdf   binary
+*.xlsx  binary
+*.mv.db binary
+*.db    binary
+*.exe   binary
