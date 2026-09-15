@@ -157,6 +157,32 @@ public ReportAccessProvider reportAccessProvider() {
 前端页面已经打进 jar（`/report/**`），**不需要你单独部署前端**。启动后直接访问
 `http://你的域名:端口/report/reports`。
 
+### 7）Java 版本要求（Java 8 / 11 的老项目怎么用）
+
+**本软件是 Java 17 字节码 + Spring Boot 3**（starter jar 里类的 major version = 61），所以：
+
+| 你的项目 | 能不能同进程集成（加 starter 依赖） | 怎么做 |
+|---|---|---|
+| Spring Boot 3 / Java 17+ | ✅ 可以 | 按上面 1）~6）做，一个依赖嵌进去 |
+| Spring Boot 2 / **Java 8、11** | ❌ 不行（JVM 直接报 `UnsupportedClassVersionError`） | 用下面的「独立部署 + 对接」 |
+| 非 Java 系统（.NET / PHP / Node…） | ❌ 同上 | 同样用「独立部署 + 对接」 |
+
+**Java 8/11 老项目的做法：让报表独立跑，老系统通过接口 / 页面 / 回调对接它**
+
+1. 找一台有 **Java 17** 的机器，把报表服务跑起来（示例是开箱即用的演示包）：
+   ```bash
+   java -jar tb-report-demo-<版本>.jar --server.port=8085 --report.metadata.datasource-id=MAIN
+   ```
+   正式使用建议把 `lib/tb-report-spring-boot-starter-*.jar` 放进你自己的 Java 17 壳工程，按第 4 步配数据源、按第 5 步接鉴权。
+2. 老系统（Java 8 也行）用 **HTTP** 跟它打交道，三种方式按需混用：
+   - **调接口**：`POST /report/api/reports/{id}/render` 拿渲染结果（JSON），自己在老系统里用、或再导出；
+   - **嵌页面**：把 `/report/reports`、`/report/viewer/{id}` 用 **iframe** 嵌进老系统的页面（只要求浏览器能访问到报表服务，跟老系统的 Java 版本无关）；
+   - **打印回调**：报表打印完，由报表服务回调你老系统的接口（报表属性里配「打印后回调接口」），"打完一张单改一次状态"的逻辑仍留在老系统。
+3. 数据源：报表服务可以直接连老系统的库（`report.datasources[]` 里配），也可以用 HTTP 数据集调老系统的接口。
+4. 鉴权：报表服务里实现一个 `ReportAccessProvider` Bean 校验 token，老系统把登录凭证（`Authorization` 头）透传过来即可。
+
+> 一句话：**同进程集成必须 Java 17；Java 8/11 的项目就让报表独立部署，用接口 / iframe 页面 / 打印回调对接。**
+
 ---
 
 ## 三、自己编译 demo
