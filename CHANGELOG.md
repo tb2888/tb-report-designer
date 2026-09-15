@@ -1,6 +1,30 @@
-# 更新日志（CHANGELOG）
+# 升级日志（CHANGELOG）
 
-面向用户写「这一版多了什么、修了什么、升级要注意什么」。**发版前先写好当前版本的条目，再跑 `.\release.ps1 -Version x.y.z`。**
+> 一个文档累加，**新版本写在最上面（倒序）**。
+> 每一版必须写两段：**① 升级内容**（多了什么 / 修了什么 / 升级要注意什么）+ **② 数据库变动**（有库表变动就给出**可直接执行的升级 SQL**，没有就写「无」）。
+> 发版前先写好条目再跑 `.\release.ps1 -Version x.y.z` —— 脚本会校验该版本条目存在、且有「### 数据库变动」小节，缺了直接中止发版。
+
+## 每一版按这个格式写（复制下面这段改）
+
+````markdown
+## [v1.1.0] — 2026-10-01
+
+### 升级内容
+- 新增：……
+- 修复：……
+- 升级注意：……（老用户需要手工做什么）
+
+### 数据库变动
+无
+
+<!-- 有库表变动时写成这样（必须是能直接执行、可重复执行的 SQL）：
+新增「字段备注」列：
+
+```sql
+ALTER TABLE tb_report_dataset ADD COLUMN field_remark VARCHAR(512) NULL COMMENT '字段备注';
+```
+-->
+````
 
 ## 版本号怎么定
 
@@ -62,6 +86,11 @@
 - 元数据 6 张表（`tb_report` / `tb_report_dataset` / `tb_report_datasource` / `tb_report_paper` / `tb_report_dict` / `tb_report_dict_item`），启动自动建表；也提供可直接执行的 MySQL 建表脚本 `db/mysql/tb-report-metadata.sql`；
 - 表名前缀可配（`report.table-prefix`，默认 `tb_report_`），避免与宿主表冲突；
 - 可挂登录态：实现一个 `ReportAccessProvider` Bean 即可接入你自己的鉴权。
+
+### 数据库变动
+
+- **首次安装**：元数据 6 张表由应用启动时自动创建；也可手工执行 `db/mysql/tb-report-metadata.sql`（MySQL 8 方言、含表与字段注释、可重复执行）。
+- **从旧版本升级**：无（首版）。
 
 ### 许可
 
