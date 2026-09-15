@@ -16,7 +16,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>tb-report-designer</name>
-    <description>TbReport · 可嵌入 Spring Boot 3 的轻量低代码报表工具（源码主仓：商业版与免费版都在这里，开源仓由 publish-open.ps1 导出）</description>
+    <description>可嵌入 Spring Boot 3 的轻量低代码报表工具</description>
 
     <modules>
         <module>report-demo</module>
@@ -25,9 +25,5 @@
     <properties>
         <java.version>17</java.version>
         <maven.compiler.release>17</maven.compiler.release>
-        <!-- 代码混淆开关：默认开启（打包出的 jar 即混淆产物）；排查时用 -Dobfuscate.skip=true 临时关闭 -->
-        <obfuscate.skip>false</obfuscate.skip>
-        <proguard.version>7.4.2</proguard.version>
-        <proguard-plugin.version>2.7.0</proguard-plugin.version>
     </properties>
 </project>
