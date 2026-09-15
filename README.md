@@ -332,6 +332,11 @@ java -jar report-demo/target/tb-report-demo-<版本>.jar
 
 其余项都有默认值（`enabled=true`、`api-prefix=/report/api`、`ui-path=/report/designer`），**一行都不写也能跑**。真正的前提只有：**Java 17 + Spring Boot 3.x**。
 
+> ⚠️ 若你用的是较早的 `0.0.1-SNAPSHOT` 包（2026-09-15 之前构建的），启动可能报
+> `Could not resolve placeholder 'report.api-prefix'` —— 那是旧包的缺陷（Controller 上的路径占位符没有默认值）。
+> 两种解法：① 在 yml 里补上 `api-prefix: /report/api` 与 `ui-path: /report/designer`；
+> ② 更新到之后的构建（已给占位符加了内联默认值，不再需要手配）。
+
 **启动报数据库连接错误？**
 没加 `--report.metadata.datasource-id=MAIN`，它在找你本机的 MySQL。加上这个参数即可用自带文件库。
 
