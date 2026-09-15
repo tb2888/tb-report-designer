@@ -238,6 +238,23 @@ java -jar report-demo/target/tb-report-demo-<版本>.jar
 
 ## 六、常见问题
 
+**我项目里已经配好数据源了，还要配 `report.datasources` 吗？**
+
+不用。你项目 `spring.datasource` 配的那个库，就是报表里的 **`MAIN` 主数据源**（设计器里显示成「系统内置」，只读）：
+
+- **数据集取数**：数据源直接选 `MAIN`，就是查你宿主库的表；
+- **报表元数据表**（`tb_report*`）：默认也建在宿主库里（`report.metadata.datasource-id` 不写 = `MAIN`）。
+
+那两项什么时候才需要写：
+
+| 配置 | 什么时候需要 |
+|---|---|
+| `report.metadata.datasource-id` | 你**不想**让 `tb_report*` 跟业务表混在一个库（例如宿主库不给建表权限、或想独立备份）→ 填一个库的 id，并把 `db/mysql/tb-report-metadata.sql` 在那个库里先建好表 |
+| `report.datasources[]` | 你要让设计器里**多出几个可选的库**（跨库取数）——才需要在这里声明；宿主库之外每多一个库就加一条 |
+| `report.table-prefix` | 宿主库里**已经有同名** `tb_report*` 表、冲突了才改（默认 `tb_report_`） |
+
+其余项都有默认值（`enabled=true`、`api-prefix=/report/api`、`ui-path=/report/designer`），**一行都不写也能跑**。真正的前提只有：**Java 17 + Spring Boot 3.x**。
+
 **启动报数据库连接错误？**
 没加 `--report.metadata.datasource-id=MAIN`，它在找你本机的 MySQL。加上这个参数即可用自带文件库。
 
