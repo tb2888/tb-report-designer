@@ -130,11 +130,20 @@ report:
       password: ""        # 支持三种写法：ENC(密文) / ${环境变量} / 明文
 ```
 
-元数据表（`tb_report*`）会在启动时**自动创建**，不用手工建表；升级版本也会自动补列扩列。
+**程序默认不碰你的数据库**：启动时**不建表、不改表、不探测**，连元数据连接都不会取 ——
+元数据表（`tb_report*`）请用下面的 SQL 脚本自己建。想让程序把**缺的表**建出来，
+把 `report.metadata.auto-init` 设为 `true`（默认 `false`）。
+
+即便打开了它，也只是"建缺的表"，**已存在的表一律不动**（不删、不改名、不改结构）。
+升级版本后如果缺列，启动日志里会写出该执行的 `ALTER TABLE` 语句，由你决定何时执行；
+想让程序自己补列，还要把 `report.metadata.auto-upgrade` 设为 `true`（默认 `false`）。
 
 - 要让 DBA 提前建库建表、或想在 Navicat 里先看表结构：用仓库里的
-  [`db/mysql/tb-report-metadata.sql`](db/mysql/tb-report-metadata.sql) —— 6 张元数据表的 MySQL 8 DDL，
-  **纯表结构、不带注释**、可重复执行。改了 `report.table-prefix` 的话，先整体替换脚本里的表名前缀。
+  [`db/mysql/tb-report-metadata.sql`](db/mysql/tb-report-metadata.sql) —— 6 张元数据表的 MySQL 8 DDL
+  （**始终是最新版本的全量结构**），**纯表结构、不带注释**、可重复执行。
+  改了 `report.table-prefix` 的话，先整体替换脚本里的表名前缀。
+- **老库升级**：按版本号**从小到大**依次执行 `db/mysql/upgrade/vX.Y.Z.sql`（文件名 = "从上一版升到该版本"）。
+  目前有 [`v1.0.0.sql`](db/mysql/upgrade/v1.0.0.sql)，只给 v1.0.0 之前用过 0.0.x 快照版的老库用；新装不用跑。
 - 密码不想写明文：进 `/report/password-tool` 页面生成 `ENC(...)` 密文再填进来。
 - 更多配置项（表名前缀、渲染行数上限、超时、多数据源池参数等）见 `report.*` 的注释说明。
 
@@ -306,7 +315,7 @@ java -jar report-demo/target/tb-report-demo-<版本>.jar
 ├── pom.xml                 # 只聚合 report-demo
 ├── report-demo/            # 演示应用源码（Spring Boot 宿主 + 示例数据 + mock 接口）
 │   └── src/main/resources/db/  # 示例业务表结构与数据
-├── db/mysql/               # tb-report-metadata.sql：元数据 6 张表的 MySQL 建表脚本（DBA/手工建库用）
+├── db/mysql/               # tb-report-metadata.sql：最新版全量建表；upgrade/vX.Y.Z.sql：按版本升级（DBA/手工建库用）
 └── lib/
     └── tb-report-spring-boot-starter-<版本>.jar   # 集成用（含引擎与内嵌前端）
 ```
@@ -351,7 +360,9 @@ java -jar report-demo/target/tb-report-demo-<版本>.jar
 页面里还有一条自检栏会直接告诉你能打印区域多大的问题。非标纸/套打建议用插件打印（C-Lodop）。
 
 **升级版本要注意什么？**
-替换 `lib/` 里的 jar 与依赖版本即可；元数据表会自动增量升级，老数据保留。
+替换 `lib/` 里的 jar 与依赖版本即可，老数据保留。元数据表**不会**自动升级：
+看本仓 `CHANGELOG.md` 里对应版本的「数据库变动」小节 —— 有变动就按版本号从小到大执行
+`db/mysql/upgrade/vX.Y.Z.sql`（没有变动的那一版就不用执行）。
 
 ---
 

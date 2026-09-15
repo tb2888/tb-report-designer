@@ -53,6 +53,10 @@ report:
   # 注意：只能引用 report.datasources 中声明的数据源（页面建的数据源本身存在元数据表里，无法自举）
   metadata:
     datasource-id: MAIN
+    # 演示程序自己建元数据表（只建不存在的表，已存在的表一律不动）。
+    # ⚠ 集成到别人项目时**不要照抄这一行**：那边默认 false —— 程序启动不碰数据库，
+    #   建表与升级由 DBA 执行 SQL 脚本（db/mysql/tb-report-metadata.sql、db/mysql/upgrade/vX.Y.Z.sql）
+    auto-init: true
   limit:
     preview-rows: 200
     render-rows: 5000
