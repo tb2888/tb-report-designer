@@ -3,7 +3,7 @@
 TbReport 是一个**低代码报表 / 报表设计器**：在浏览器里画表格、绑定字段，就能做出**销售报表、对账单、发货单、检验单、工资单**这类**数据报表与打印表单**。
 支持**循环块（明细自动展开）、主子表、分组汇总、二维码/条码、1:1 打印套打、导出 Excel**，还能把**在 Excel 里排好版的表格直接导入成报表模板**；
 前端页面随 jar 一起发布，**一个依赖**嵌进你的 Spring Boot 3 项目，不用单独部署前端。
-可作为 **JimuReport（积木报表）** 一类商业报表工具的**免费替代方案**。
+可作为**同类商业报表工具**的**免费替代方案**。
 
 > Lightweight low-code reporting for Java / Spring Boot 3: visual report designer, master-detail & loop blocks,
 > SQL / HTTP / JSON datasets, 1:1 print forms, Excel import/export, page numbers & stamps — front-end included, embed with one jar.
@@ -192,18 +192,18 @@ public ReportAccessProvider reportAccessProvider() {
 
 > 一句话：**同进程集成必须 Java 17；Java 8/11 的项目就让报表独立部署，用接口 / iframe 页面 / 打印回调对接。**
 
-### 8）示例：接入 JeecgBoot 的登录态
+### 8）示例：接入你自己的登录态
 
-JeecgBoot 自己前端发的头是 **`X-Access-Token`**，登录成功后 `LoginUser` 会存进 Redis（key = `CommonConstant.PREFIX_USER_TOKEN + token`）；
-而**报表前端固定把同一串 token 放在 `Authorization` 头**，所以下面的 provider **两个头都读**，两端都能用。
+你系统前端要是把 token 放在某个请求头里、登录态存在 Redis（很常见的做法），照下面写就行 ——
+这份 provider **两个头都读**（你系统的头 + 报表前端固定发的 `Authorization`），两端都能用。
 
 ```java
-package org.jeecg.modules.report.config;      // 放在你自己会被 Spring 扫到的包
+package com.yourcompany.report.config;         // 放在你自己会被 Spring 扫到的包
 
 import com.jimu.report.starter.security.ReportAccessProvider;
 import jakarta.servlet.http.HttpServletRequest;
-import org.jeecg.common.system.vo.LoginUser;   // ⚠️ 类名/包名按你的 JeecgBoot 版本核对
-import org.jeecg.common.util.JwtUtil;
+import com.yourcompany.framework.auth.JwtUtil;  // ← 换成你系统的 token 校验工具
+import com.yourcompany.framework.auth.LoginUser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -220,7 +220,7 @@ public class ReportSecurityConfig {
                 return false;
             }
             try {
-                LoginUser user = JwtUtil.verifyToken(token);   // token 无效会抛异常
+                LoginUser user = JwtUtil.verifyToken(token);   // token 无效会抛异常（换成你的校验方法）
                 if (user == null) {
                     return false;
                 }
@@ -234,9 +234,9 @@ public class ReportSecurityConfig {
         };
     }
 
-    /** 报表页面发的是 Authorization；Jeecg 自己发的是 X-Access-Token —— 两个头都读 */
+    /** 报表页面发的是 Authorization；你系统的前端发的是另一个头 —— 两个头都读 */
     private static String readToken(HttpServletRequest request) {
-        String t = request.getHeader("X-Access-Token");
+        String t = request.getHeader("X-Token");       // ← 换成你系统前端实际用的头名
         if (t == null || t.isBlank()) {
             t = request.getHeader("Authorization");
         }
@@ -248,7 +248,7 @@ public class ReportSecurityConfig {
 }
 ```
 
-**不想依赖 Jeecg 内部类**（版本之间类名有差异时更稳）：直接把 Redis 当"登录态白名单"查，有值就是已登录：
+**不想依赖框架内部工具类**（版本之间类名有差异时更稳）：直接把 Redis 当"登录态白名单"查，有值就是已登录：
 
 ```java
 @Bean
@@ -259,15 +259,15 @@ public ReportAccessProvider reportAccessProvider(RedisUtil redisUtil) {
         if (token == null || token.isBlank()) {
             return false;
         }
-        // key 与 Jeecg 登录时写入的保持一致
+        // key 与你系统登录时写入的保持一致
         return redisUtil.hasKey("prefix_user_token_" + token);
     };
 }
 ```
 
-**token 怎么进到报表页面**（同域部署通常不用管）：报表前端会自己找 —— 优先 `window.__REPORT_TOKEN__`，其次 URL 上的 `?__token=xxx`，再不行就扫 localStorage / sessionStorage（Jeecg Vue3 存的 `pro__Access-Token` 能被扫到）。都拿不到时才需要手工注入。
+**token 怎么进到报表页面**（同域部署通常不用管）：报表前端会自己找 —— 优先 `window.__REPORT_TOKEN__`，其次 URL 上的 `?__token=xxx`，再不行就扫 localStorage / sessionStorage（前端框架存在里面的 token 能扫到就用）。都拿不到时才需要手工注入。
 
-> ⚠️ `JwtUtil` / `TokenUtils` / `LoginUser` / `CommonConstant` 这些类在不同 JeecgBoot 版本里包路径略有差异（Shiro → Spring Security 迁移期间尤其明显），请以你项目里的实际引用为准；拿不准就用上面那版「查 Redis」的写法。
+> ⚠️ 上面的 `JwtUtil` / `LoginUser` / `RedisUtil` 都是**占位示例**，请换成你自己系统的类；不同框架、不同版本的包路径差异较大，拿不准就用上面那版「查 Redis 白名单」的写法。
 
 ---
 
