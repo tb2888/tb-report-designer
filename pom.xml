@@ -13,7 +13,7 @@
 
     <groupId>io.github.tb2888</groupId>
     <artifactId>tb-report-designer</artifactId>
-    <version>1.0.3</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
     <name>tb-report-designer</name>
     <description>可嵌入 Spring Boot 3 的轻量低代码报表工具</description>
